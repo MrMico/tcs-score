@@ -1,0 +1,61 @@
+<html>
+  <body>
+    <p>Home:</p>
+    <p id="home"></p>
+    <p>Away:</p>
+    <p id="away"></p>
+    <p>Period:</p>
+    <p id="per"></p>
+    <p>Time:</p>
+    <p id="time"></p>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+      var timeout;
+      var socket = io();
+      var seconds = 0;
+      var digits = "";
+      var localSnap;
+      function getEpochTime() {
+        var d = new Date();
+        var epochCalc = Math.round(d.getTime() / 1000);
+        return epochCalc;
+      }
+
+      function updateState() {
+        stopUpdateTime();
+        updateElements();
+        updateTime();
+      }
+
+      function updateElements() {
+        document.getElementById("home").innerHTML = localSnap.home;
+        document.getElementById("away").innerHTML = localSnap.away;
+        document.getElementById("per").innerHTML = localSnap.per;
+      }
+      socket.on('new snapshot', function(snapshot) {
+        localSnap = snapshot;
+        savedSnap = localSnap
+        console.log("New Snapshot!");
+        console.log(snapshot);
+        updateState();
+      });
+
+      function updateTime() {
+        if (localSnap.paused == true) {
+          time = localSnap.time;
+        }else{
+          time = Math.abs(localSnap.epoch - getEpochTime());
+          timeout=setTimeout(updateTime, 1000);
+        }
+        seconds = time;
+        digits = Math.floor(time/60) + ":" + (time%60);
+        document.getElementById("time").innerHTML = digits;
+        console.log(digits);
+        console.log(timeout);
+      }
+      function stopUpdateTime() {
+        clearTimeout(timeout);
+      }
+    </script>
+  </body>
+</html>

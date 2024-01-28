@@ -1,0 +1,183 @@
+<html>
+  <head>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <style>
+      .selected-button {
+        background-color: blue;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>This is edit.html</h1>
+    <button id="update" onclick="updateSnapshot()">Update</button>
+    <br>
+    <p>Home - Away - Period</p>
+    <input id="home" onchange="updateValue('home');" type="number">
+    <input id="away" onchange="updateValue('away');" type="number">
+    <input id="per" onchange="updateValue('per');" type="text">
+
+    <br>
+    <p>Home Fouls - Away Fouls</p>
+    <input id="home_fouls" onchange="updateValue('home_fouls');" type="number">
+    <input id="away_fouls" onchange="updateValue('away_fouls');" type="number">
+    <br>
+    <button id="home_poss" onclick="homePoss();">Home Poss</button>
+    <button id="away_poss" onclick="awayPoss();">Away Poss</button>
+    <br>
+    <h3>Time:</h3>
+    <input id="timea" onchange="updateTimeValue()" style="width:50px" type="number">:<input id="timeb" onchange="updateTimeValue()" style="width:50px" type="number">
+    <br>
+    <button onclick="startTime()">Start</button>
+    <button onclick="stopTime()">Stop</button>
+    <br>
+    <button id="showtime" onclick="showTime()">Show</button>
+    <button id="hidetime" onclick="hideTime()">Hide</button>
+    <br>
+    <h3>Preview:</h3>
+    <iframe src = "/scorebug" width=100%></iframe>
+    <h3>Styling:</h3>
+    <br>
+
+    <a href="/form-home">Upload Home Image</a>
+    <a href="/form-away">Upload Away Image</a>
+    <br>
+
+    <p>Home Name:</p>
+    <input id='home_name' onchange="updateValue('home_name');" type="text">
+    <p>Away Name:</p>
+    <input id='away_name' onchange="updateValue('away_name');" type="text">
+<br>
+    <p>Home Color 1</p>
+    <input id="home_color1" onchange="updateValue('home_color1');" type="color">
+    <p>Home Color 2</p>
+    <input id='home_color2' onchange="updateValue('home_color2');" type="color">
+<br>
+    <p>Away Color 1</p>
+    <input id="away_color1" onchange="updateValue('away_color1');" type="color">
+
+    <p>Away Color 2</p>
+    <input id="away_color2" onchange="updateValue('away_color2');" type="color">
+    
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+      var timeout;
+      var updateElement = document.getElementById("update");
+      var socket = io();
+      var digits = "";
+      var localSnap;
+      var savedSnap = localSnap;
+
+      function getEpochTime() {
+        var d = new Date();
+        var epochCalc = Math.round(d.getTime() / 1000);
+        return epochCalc;
+      }
+
+      function updateSnapshot() {
+        socket.emit('new snapshot', (localSnap));
+      }
+
+      function updateState() {
+        stopUpdateTime();
+        updateElements();
+        updateTime();
+        updateElement.disabled = true;
+      }
+
+      function updateValue(id) {
+        let element = document.getElementById(id);
+        localSnap[id] = element.value;
+        updateElement.disabled = false;
+        updateSnapshot();
+      }
+
+      function updateTimeValue() {
+        let timea = document.getElementById('timea');
+        let timeb = document.getElementById('timeb');
+        let newtime = parseInt(timea.value) * 60 + parseInt(timeb.value);
+        localSnap.time = newtime;
+        console.log(newtime);
+        updateElement.disabled = false;
+      }
+
+      function startTime() {
+        let newtime = parseInt(timea.value) * 60 + parseInt(timeb.value);
+        let offset = parseInt(getEpochTime()) + newtime;
+        localSnap.paused = false;
+        localSnap.epoch = offset;
+        updateSnapshot();
+      }
+
+      function stopTime() {
+        localSnap.paused = true;
+        localSnap.time = parseInt(timea.value) * 60 + parseInt(timeb.value);
+        updateSnapshot();
+      }
+
+      function updateElements() {
+        document.getElementById("home").value = localSnap.home;
+        document.getElementById("away").value = localSnap.away;
+        document.getElementById("per").value = localSnap.per;
+        document.getElementById("home_fouls").value = localSnap.home_fouls;
+        document.getElementById("away_fouls").value = localSnap.away_fouls;
+        document.getElementById("home_poss").className = localSnap.home_poss === true ? "btn btn-primary" : "btn btn-secondary";
+        document.getElementById("away_poss").className = localSnap.away_poss === true ? "btn btn-primary" : "btn btn-secondary";
+        document.getElementById("showtime").className = localSnap.show_timer === true ? "selected-button" : "";
+        document.getElementById("hidetime").className = localSnap.show_timer === false ? "selected-button" : "";
+        document.getElementById("home_color1").value = localSnap.home_color1;
+        document.getElementById("home_color2").value = localSnap.home_color2;
+        document.getElementById("away_color1").value = localSnap.away_color1;
+        document.getElementById("away_color2").value = localSnap.away_color2;
+        document.getElementById('home_name').value = localSnap.home_name;
+        document.getElementById('away_name').value = localSnap.away_name;
+      }
+      function homePoss() {
+        localSnap.home_poss = localSnap.home_poss ? false : true;
+        localSnap.away_poss = false;
+        updateSnapshot();
+      }
+      function awayPoss() {
+        localSnap.away_poss = localSnap.away_poss ? false : true;
+        localSnap.home_poss = false;
+        updateSnapshot();
+      }
+      function showTime() {
+        localSnap.show_timer = true;
+        updateSnapshot();
+      }
+      function hideTime() {
+        localSnap.show_timer = false;
+        updateSnapshot();
+      }
+      socket.on('new snapshot', function(snapshot) {
+        localSnap = snapshot;
+        savedSnap = localSnap
+        console.log("New Snapshot!");
+        console.log(snapshot);
+        updateState();
+      });
+      updateTime();
+
+      function updateTime() {
+        if (localSnap.paused == true) {
+          time = localSnap.time;
+        }else{
+          time = Math.abs(localSnap.epoch - getEpochTime());
+          timeout=setTimeout(updateTime, 1000);
+        }
+        
+        seconds = ((time%60).toString().length == 1)*"0" + time%60;
+        minutes = Math.floor(time/60);
+        digits = minutes + ":" + seconds;
+        document.getElementById("timea").value = Math.floor(time/60);
+        document.getElementById("timeb").value = (time%60);
+        console.log(digits);
+        console.log(timeout);
+      }
+
+      function stopUpdateTime() {
+        clearTimeout(timeout);
+      }
+    </script>
+  </body>
+</html>

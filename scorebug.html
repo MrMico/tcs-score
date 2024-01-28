@@ -1,0 +1,243 @@
+<html>
+  <head>
+    <style>
+      @import url("https://fonts.googleapis.com/css?family=Montserrat");
+
+      body {
+        font-family: "Montserrat", "Arial";
+        color: white;
+        background-color: black;
+      }
+
+      .scoreboard {
+        display: flex;
+        flex-direction: row;
+      }
+
+      .scoreboard > * {
+        border-top: 1px solid white;
+        border-bottom: 1px solid white;
+        border-right: 1px solid white;
+        height: 50px;
+        font-weight: bold;
+      }
+
+      .scoreboard > *:first-child {
+        border-left: 1px solid white;
+      }
+
+      .team {
+        display: flex;
+        flex-direction: row;
+        color: white;
+      }
+
+      .team-detail {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+      }
+
+      .team-detail {
+        padding: 0em 0.5em;
+      }
+
+      .team-detail {
+        font-size: 1.5em;
+      }
+
+      .team-detail .team-nameandscore {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+      }
+
+      .team-detail .team-thisgame {
+        width: 150px;
+        font-size: 0.5em;
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        opacity: 0.8;
+      }
+
+      .timer {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        background-color: #222;
+      }
+
+      .timer-container {
+        display: flex;
+        flex-direction: row;
+      }
+
+      .timer-container > * {
+        border-right: 1px solid white;
+        padding: 0em 1em;
+        color: white;
+      }
+
+      .timer-container-hide {
+        display: flex;
+        flex-direction: row;
+        padding: 0em 1em;
+        color: white;
+      }
+
+      .timer-container > *:last-child {
+        border-right: 0;
+        color: yellow;
+      }
+
+      .logo {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 0em 0.5em;
+        background-color: black;
+      }
+
+      .logo img {
+        width: 100px;
+      }
+
+      /* Game */
+
+      .home-colors {
+        background-color: white;
+        color: steelblue;
+      }
+
+      .away-colors {
+        background-color: goldenrod;
+      }
+      .hidden-class {
+        display: none;
+      }
+      .show-class {
+        display: flex;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="scoreboard">
+      <div id="homeColor1" class="team team-a home-colors">
+        <div class="team-logo">
+          <img
+            src="/homeimage.png"
+            width="50px"
+            height="50px"
+          />
+        </div>
+        <div id="homeColor2" class="team-detail">
+          <div class="team-nameandscore">
+            <div id = "homename" class="team-name">TCS</div>
+            <div id = "home" class="team-score">51</div>
+          </div>
+          <div class="team-thisgame">
+            <div id="home_detail1" class="team-detail1">TO: 0</div>
+            <div id="home_detail2" class="team-detail2">FOULS: 0</div>
+          </div>
+        </div>
+      </div>
+      <div id="awayColor1" class="team team-b away-colors
+ ">
+        <div class="team-logo">
+          <img
+            src="/awayimage.png"
+            width="50px"
+            height="50px"
+          />
+        </div>
+        <div id="awayColor2" class="team-detail">
+          <div class="team-nameandscore">
+            <div id="awayname" class="team-name">BRASHEAR&nbsp;&nbsp;</div>
+            <div id="away" class="team-score">45</div>
+          </div>
+          <div class="team-thisgame">
+            <div id="away_detail1" class="team-detail1">TO: 0</div>
+            <div id="away_detail2" class="team-detail2">FOULS: 0</div>
+          </div>
+        </div>
+      </div>
+      <div class="timer">
+        <div id="contains-timer" class="timer-container">
+          <div id="per" class="quarter">3rd</div>
+          <div id="time" class="hidden-class" style="width:35px;">11:45</div>
+        </div>
+      </div>
+      <!--<div class="logo">
+        <img
+          src="http://a.espncdn.com/promotions/bsa/apps/instantaccess/images/espn_logo.png"
+        /> -->
+      </div>
+    </div>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+      var timeout;
+      var socket = io();
+      var digits = "";
+      var localSnap;
+      function getEpochTime() {
+        var d = new Date();
+        var epochCalc = Math.round(d.getTime() / 1000);
+        return epochCalc;
+      }
+
+      function updateState() {
+        stopUpdateTime();
+        updateElements();
+        updateTime();
+      }
+
+      function updateElements() {
+        document.getElementById("home").innerHTML = localSnap.home;
+        document.getElementById("away").innerHTML = localSnap.away;
+        document.getElementById("per").innerHTML = localSnap.per;
+        document.getElementById("home_detail1").innerHTML = "FOULS: " + localSnap.home_fouls;
+        document.getElementById("home_detail2").innerHTML = (localSnap.home_poss === true ? "< POSS" : " ");
+        document.getElementById("away_detail1").innerHTML = (localSnap.away_poss === true ? "POSS >" : " ");
+        document.getElementById("away_detail2").innerHTML = "FOULS: " + localSnap.away_fouls;
+        document.getElementById('time').className = localSnap.show_timer === true ? 'timeleft' : 'hidden-class';
+        document.getElementById('contains-timer').className = localSnap.show_timer === true ? 'timer-container' : 'timer-container-hide';
+        document.getElementById('homeColor1').style.backgroundColor = localSnap.home_color1;
+        document.getElementById('awayColor1').style.backgroundColor = localSnap.away_color1;
+        document.getElementById('homeColor2').style.color = localSnap.home_color2;
+        document.getElementById('awayColor2').style.color = localSnap.away_color2;
+        document.getElementById('homename').innerHTML = localSnap.home_name;
+        document.getElementById('awayname').innerHTML = localSnap.away_name;
+
+      }
+      socket.on('new snapshot', function(snapshot) {
+        localSnap = snapshot;
+        savedSnap = localSnap
+        console.log("New Snapshot!");
+        console.log(snapshot);
+        updateState();
+      });
+
+      function updateTime() {
+        if (localSnap.paused == true) {
+          time = localSnap.time;
+        }else{
+          time = Math.abs(localSnap.epoch - getEpochTime());
+          timeout=setTimeout(updateTime, 1000);
+        }
+        seconds = time%60;
+        if(seconds.toString().length == 1){
+          seconds = "0" + seconds.toString();
+        }
+        minutes = Math.floor(time/60);
+        digits = minutes + ":" + seconds;
+        document.getElementById("time").innerHTML = digits;
+        console.log(digits);
+        console.log(timeout);
+      }
+      function stopUpdateTime() {
+        clearTimeout(timeout);
+      }
+    </script>
+  </body>
+</html>
