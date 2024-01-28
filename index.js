@@ -6,7 +6,7 @@ const server = http.createServer(app);
 const { Server } = require("socket.io");
 const io = new Server(server);
 const lodash = require('lodash');
-var snap = { "home": 0, "away": 0, "per": 0, "paused": true, "time": 0, "epoch": 0, "home_timeouts":0, "away_timeouts":0, "home_bonus":false, "away_bonus":false, "home_fouls":0, "away_fouls":0, "home_poss":true, "away_poss":false, "home_name": "Home", "away_name": "Away", "home_color1":"#ff0000", "away_color1":"#ff0000", "home_color2": "#ff0000", "away_color2": "#ff0000", "home_image":"" , "away_image":"", "show_timer":false};
+var snap = { "home": 0, "away": 0, "per": 0, "paused": true, "time": 0, "epoch": 0, "home_timeouts":0, "away_timeouts":0, "home_bonus":false, "away_bonus":false, "home_fouls":0, "away_fouls":0, "home_poss":true, "away_poss":false, "home_name": "Home", "away_name": "Away", "home_color1":"#ffffff", "away_color1":"#ffffff", "home_color2": "#000000", "away_color2": "#000000", "home_image":"" , "away_image":"", "show_timer":false};
 
 
 var d = new Date();
